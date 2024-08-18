@@ -18,8 +18,25 @@ export default function App() {
       setError({invalid: false, missing: true})
       console.log(error)
     } else {
-      if (url.includes("https://www.tiktok.com/") || url.includes("https://vm.tiktok.com/")) {
+      if (url.includes("https://www.tiktok.com/") || url.includes("/video/") && url.includes("/photo/") && url.includes("https://www.tiktok.com/")) {
         console.log(url)
+        if (url.includes("/video/")) {
+          const videoIdMatch = url.match(/\/video\/(\d+)/);
+
+          if (videoIdMatch) {
+            const videoId = videoIdMatch[1];
+            console.log(videoId);
+          }
+        }
+        if (url.includes("/photo/")) {
+          const photoIdMatch = url.match(/\/photo\/(\d+)/);
+
+          if (photoIdMatch) {
+            const photoId = photoIdMatch[1];
+            console.log(photoId);
+          }
+        }
+
         setError({invalid: false, missing: false})
       } else {
         setError({invalid: true, missing: false})
@@ -31,28 +48,38 @@ export default function App() {
     <div className="drawer drawer-end">
       <input id="drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content">
-        <main className="flex flex-col w-screen h-screen items-center justify-center gap-4 p-4">
+        <main className="flex flex-col w-screen h-screen items-center justify-center gap-4 p-4 md:p-6">
           <header className="w-full flex items-center justify-between">
-            <Link className="text-3xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/">TikTracks.</Link>
-            <label htmlFor="drawer" className="btn drawer-button btn-ghost">
+            <Link className="text-3xl font-bold hover:text-primary-content/30 transition-colors duration-200 md:text-4xl" to="/">TikTracks.</Link>
+            <div className="md:flex gap-10 items-center hidden mr-4">
+            <Link className="text-2xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/">Terms.</Link>
+            <Link className="text-2xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/">About.</Link>
+            </div>
+            <label htmlFor="drawer" className="btn drawer-button btn-ghost md:hidden">
               <Menu size={24} />
             </label>
           </header>
-          <section className="w-full h-full flex flex-col gap-4 md:items-center justify-center">
-          <h1 className="text-5xl font-bold">TikTracks.</h1>
-          <p>Download Tiktok Tracks from videos or slideshows from a single link in one click, all for free.</p>
-          <form onSubmit={downloadSong} className="w-full flex flex-col gap-4">
-            <input type="url" placeholder="https://www.tiktok.com/@example/video/" className="input input-bordered" value={url} onChange={(e) => setUrl(e.target.value)}/>
+          <section className="w-full h-full flex flex-col gap-4 md:items-center justify-center md:gap-6">
+          <h1 className="text-5xl font-bold md:text-7xl">TikTracks.</h1>
+          <p className="md:w-[30rem] md:text-xl text-center">Download Tiktok Tracks from videos or slideshows from a single link in one click, all for free.</p>
+          <form onSubmit={downloadSong} className="w-full flex flex-col gap-4 md:w-[34rem]">
+            <div className="w-full flex items-center gap-3">
+            <input type="url" placeholder="https://www.tiktok.com/@example/video/021542" className="input input-bordered w-full" value={url} onChange={(e) => setUrl(e.target.value)}/>
+            <button className="btn btn-primary w-fit md:flex md:gap-2 hidden" type="submit">
+              <Download size={24}/>
+              Download
+              </button>
+            </div>
             { error?.missing && <span className="text-lg text-error">This field is required.</span>}
             { error?.invalid && <span className="text-lg text-error">This url is invalid.</span>}
-            <button className="btn btn-primary w-fit" type="submit">
+            <button className="btn btn-primary w-fit md:hidden" type="submit">
               <Download size={24}/>
               Download
               </button>
           </form>
           </section>
           <footer>
-            <h1 className="text-center font-semibold">2024 Ayomide. All rights reserved.</h1>
+            <h1 className="text-center font-semibold md:text-lg">2024 Ayomide. All rights reserved.</h1>
           </footer>
         </main>
       </div>
