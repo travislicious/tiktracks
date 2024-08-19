@@ -1,6 +1,7 @@
 import { Menu, Download } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 interface ErrorLevels {
   invalid: boolean,
@@ -10,6 +11,7 @@ interface ErrorLevels {
 export default function App() {
   const [url, setUrl] = useState("")
   const [error, setError] = useState<ErrorLevels>()
+  const navigate = useNavigate()
 
   const downloadSong = (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -25,7 +27,7 @@ export default function App() {
 
           if (videoIdMatch) {
             const videoId = videoIdMatch[1];
-            console.log(videoId);
+            navigate(`/download/${videoId}`)
           }
         }
         if (url.includes("/photo/")) {
@@ -33,7 +35,7 @@ export default function App() {
 
           if (photoIdMatch) {
             const photoId = photoIdMatch[1];
-            console.log(photoId);
+            navigate(`/download/${photoId}`)
           }
         }
 
@@ -52,8 +54,8 @@ export default function App() {
           <header className="w-full flex items-center justify-between">
             <Link className="text-3xl font-bold hover:text-primary-content/30 transition-colors duration-200 md:text-4xl" to="/">TikTracks.</Link>
             <div className="md:flex gap-10 items-center hidden mr-4">
-            <Link className="text-2xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/">Terms.</Link>
-            <Link className="text-2xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/">About.</Link>
+            <Link className="text-2xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/terms">Terms.</Link>
+            <Link className="text-2xl font-bold hover:text-primary-content/30 transition-colors duration-200" to="/about">About.</Link>
             </div>
             <label htmlFor="drawer" className="btn drawer-button btn-ghost md:hidden">
               <Menu size={24} />
