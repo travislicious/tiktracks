@@ -1,10 +1,13 @@
 import { ArrowLeft } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export default function TermsPage() {
     return (
         <main className="w-full h-full flex flex-col gap-4 p-4">
             <div className="flex w-full gap-2 items-center md:mb-2">
-                <ArrowLeft className="md:size-10"/>
+                <Link to="/">
+                    <ArrowLeft className="md:size-10"/>
+                </Link>
                 <h1 className="font-bold md:text-3xl">Terms and Conditions</h1>
             </div>
             <p className="md:text-2xl"><strong>Last updated:</strong> 18/08/2024</p>
