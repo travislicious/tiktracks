@@ -1,8 +1,12 @@
 import { ArrowLeft, Share2 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
+import Loading from "./LoadingDownload"
+import ErrorSection from "./ErrorSection"
 
 export default function DownloadPage() {
+
+    
     return (
         <main className="w-screen h-screen flex flex-col p-4 items-center justify-center">
             <header className="w-full flex items-center justify-between">
