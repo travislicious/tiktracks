@@ -12,7 +12,7 @@ export default function AboutPage() {
             </div>
             <h1 className="text-2xl font-bold md:text-4xl">TikTracks.</h1>
             <hr className="border border-neutral"/>
-            <p className="md:text-xl">TikTracks is a website who helps downloading Tiktok Tracks from videos or slideshows from a single link in one click, all for free. You can download the audio only, a video made with the source video cover and a video made with the song cover.</p>
+            <p className="md:text-xl">TikTracks is a website who helps downloading Tiktok Tracks from videos using a single link in one click, all for free. You can download the audio only, a video made with the source video cover and a video made with the song cover.</p>
             <h2 className="font-bold md:text-2xl">Key Features.</h2>
             <ul className="pl-2 flex flex-col gap-2 md:text-xl">
                 <li>- Fast And Easy Use.</li>

@@ -63,7 +63,7 @@ export default function App() {
           </header>
           <section className="w-full h-full flex flex-col gap-4 md:items-center justify-center md:gap-6">
           <h1 className="text-5xl font-bold md:text-7xl">TikTracks.</h1>
-          <p className="md:w-[30rem] md:text-xl text-center">Download Tiktok Tracks from videos or slideshows from a single link in one click, all for free.</p>
+          <p className="md:w-[30rem] md:text-xl md:text-center">Download Tiktok Tracks from videos using a single link in one click, all for free.</p>
           <form onSubmit={downloadSong} className="w-full flex flex-col gap-4 md:w-[34rem]">
             <div className="w-full flex items-center gap-3">
             <input type="url" placeholder="https://www.tiktok.com/@example/video/021542" className="input input-bordered w-full" value={url} onChange={(e) => setUrl(e.target.value)}/>
