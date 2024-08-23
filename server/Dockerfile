@@ -23,9 +23,6 @@ RUN apt-get update && \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright
-RUN pip install playwright
-RUN playwright install
 
 # Copy the current directory contents into the container at /app
 COPY . /app

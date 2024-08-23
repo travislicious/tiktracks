@@ -1,48 +1,52 @@
-from playwright.sync_api import sync_playwright, Playwright, Page
+import io
+import time, os
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
-import re
-import bs4
 import requests
-from requests.structures import CaseInsensitiveDict
+import bs4
 import renderer
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 CORS(app)
 
-current_song = {
-    'profile_pic': "",
-    'music_url': "",
-    'thumb_url': "",
-    'download_path': "",
-    'fname': "",
-    'author_name': '',
-    'song_name': ''
-}
+def delete_file(filename, delay):
+    """
+    Deletes the specified file after the given delay.
+    """
+    time.sleep(delay)
+    file_path = os.path.join('temp/', filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f'{filename} deleted.')
+
 
 def extract_from_embed(url):
+    renderer.init()
     embed_url = f'https://www.tiktok.com/oembed?url={url}'
     data = requests.get(embed_url, timeout=60)
     data = data.json()
-    profile_pic, music_url, song_name = extract_sound(url)
+    profile_pic, music_url, song_name, music_author = extract_sound(url)
     song_data = {
-        'thumb_url': data['thumbnail_url'],
         'music_url': music_url,
         'author_name': data['author_name'],
         'profile_pic': profile_pic,
-        'song_name': song_name
-
-    }
-    global current_song
-    current_song = {
-        'profile_pic': song_data['profile_pic'],
-        'music_url': song_data['music_url'],
-        'thumb_url': song_data['thumb_url'],
-        'author_name': song_data['author_name'],
-        'song_name': song_data['song_name']
+        'song_name': song_name,
+        'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
+        'video_filename': f'{music_author} - {song_name} (Video).mp4',
     }
 
     return song_data
+
+@app.route("/create-video", methods=['POST'])
+def create_video():
+    data = request.json
+    image_url = data['image_url']
+    music_url = data['music_url']
+    video_path = renderer.create_video(music_url, image_url)
+
+
+    return jsonify({'path': video_path})
 
 def extract_sound(link):
     url = "https://ttsave.app/download"
@@ -54,26 +58,20 @@ def extract_sound(link):
     url_list = [elem["href"] for elem in html.find_all('a')]
     span_list = [elem.string for elem in html.find_all('span')]
 
-    return url_list[0], url_list[4], span_list[4].split('-')[1]
+    return url_list[0], url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
 
+def extract_from_slideshow(link):
+    url = "https://ttsave.app/download"
 
-@app.route("/set-type", methods=["POST"])
-def set_type():
-    data = request.json
-    
-    if data["type"] == "music":
-        current_song["download_path"] = current_song["music_url"]
-        current_song["fname"] = f'{current_song["author_name"]} - {current_song["song_name"]} (Audio)'
-    elif data["type"] == "cover-video":
-        renderer.create_video_from_cover(current_song['music_url'], current_song['cover_url'])
-        current_song["download_path"] = f'http://127.0.0.1:5000/{renderer.CURRENT_FILE["filepath"]}'
-        current_song["fname"] = f'{current_song["author_name"]} - {current_song["song_name"]} (Cover Video)'
-    elif data["type"] == "thumb-video":
-        renderer.create_video_from_thumb(current_song['music_url'], current_song['thumb_url'])
-        current_song["download_path"] = f'http://127.0.0.1:5000/{renderer.CURRENT_FILE["filepath"]}'
-        current_song["fname"] = f'{current_song["author_name"]} - {current_song["song_name"]} (Thumb Video)'
+    data = {"query": link,"language_id":"1"}
 
-    return 'Type set.'
+    resp = requests.post(url, json=data, timeout=60)
+    html = bs4.BeautifulSoup(resp.content, 'html.parser')
+    url_list = [elem["href"] for elem in html.find_all('a')]
+    span_list = [elem.string for elem in html.find_all('span')]
+
+    return url_list[0], url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
+
         
 
 
@@ -91,9 +89,41 @@ def scrape():
 
     return jsonify(result)
 
-@app.route("/download", methods=["GET"])
+@app.route("/download-song", methods=["GET"])
 def download():
-    return send_file(current_song["download_path"], as_attachment=True, download_name=current_song["fname"])
+    data = request.args
+    response = requests.get(data['url'], timeout=60)
+    file_stream = io.BytesIO(response.content)
+    content_type = response.headers.get('Content-Type', 'application/octet-stream')
+
+    return send_file(file_stream, mimetype=content_type, as_attachment=True, download_name=data['name'])
+
+
+@app.route("/download-video", methods=["GET"])
+def download_video():
+    data = request.args
+
+    return send_file(data['path'], mimetype='video/mp4', as_attachment=True, download_name=data['name'])
+
+def delete_old_files():
+    """
+    Deletes files that were created more than 1 minute ago.
+    """
+    current_time = time.time()
+    for filename in os.listdir("temp/"):
+        file_path = os.path.join("temp/", filename)
+        if os.path.isfile(file_path):
+            # Get the file's creation/modification time
+            file_age = current_time - os.path.getmtime(file_path)
+            if file_age > 300:  # 60 seconds = 1 minute
+                os.remove(file_path)
+                print(f'{filename} deleted (older than 1 minute).')
+
+# Set up the scheduler to delete old files periodically
+scheduler = BackgroundScheduler()
+scheduler.add_job(delete_old_files, 'interval', seconds=10)  # Check every 10 seconds
+scheduler.start()
+
 
 if __name__ == "__main__":
     app.run(debug=True)

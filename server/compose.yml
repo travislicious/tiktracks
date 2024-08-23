@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  flask-api:
+  tiktracks-backend:
     build: .
     ports:
       - "5000:5000"
     volumes:
       - .:/app
     environment:
-      - FLASK_ENV=development
+      - FLASK_ENV=production
     command: flask run --host=0.0.0.0

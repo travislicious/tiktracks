@@ -3,28 +3,48 @@ from io import BytesIO
 import os
 from moviepy.editor import ImageClip, AudioFileClip
 from PIL import Image
+import random
+import string
+import time
+from apscheduler.schedulers.background import BackgroundScheduler
 
 SAVE_PATH = "temp/"
-CURRENT_FILE = {
-    "filename": "",
-    "filepath": ""
-}
 
 def init():
-    clear_all()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(delete_old_files, 'interval', seconds=10)  # Check every 10 seconds
+    scheduler.start()
     os.makedirs("temp", exist_ok=True)
 
-def create_video_from_thumb(audio_url, thumb_url):
+def generate_random_filename(length=12):
+    letters_and_digits = string.ascii_letters + string.digits
+    random_string = ''.join(random.choice(letters_and_digits) for i in range(length))
+    return random_string
 
+def delete_file(filename, delay):
+    """
+    Deletes the specified file after the given delay.
+    """
+    time.sleep(delay)
+    file_path = os.path.join('temp/', filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f'{filename} deleted.')
+
+def create_video(audio_url, thumb_url):
+
+    video_name = generate_random_filename()
+    audio_name = generate_random_filename()
+    image_name = generate_random_filename()
     image = download_image(thumb_url)
-    audio_path = download_audio(audio_url)
+    audio_path = download_audio(audio_url, audio_name)
 
     # Convert the image to a format suitable for MoviePy
-    image.save(f'{SAVE_PATH}temp_image.jpg')
+    image.save(f'{SAVE_PATH}{image_name}.jpg')
 
     # Create moviepy clips
     audio_clip = AudioFileClip(audio_path)
-    image_clip = ImageClip(f'{SAVE_PATH}temp_image.jpg').set_duration(audio_clip.duration)  # Duration in seconds
+    image_clip = ImageClip(f'{SAVE_PATH}{image_name}.jpg').set_duration(audio_clip.duration)  # Duration in seconds
 
     # Resize image to match the audio duration  # Resize image height to 720p
 
@@ -32,22 +52,15 @@ def create_video_from_thumb(audio_url, thumb_url):
     video_clip = image_clip.set_audio(audio_clip)
 
     # Export video
-    video_clip.write_videofile(f'{SAVE_PATH}{image.filename}', fps=30)
-    get_file_data(image.filename, f'{SAVE_PATH}{image.filename}')
+    video_clip.write_videofile(f'temp/{video_name}.mp4', fps=30)
 
 
-def create_video_from_cover(audio_url, thumb_url):
-    pass
+    return f'temp/{video_name}.mp4'
+
 
 def clear_all():
     if os.path.exists(SAVE_PATH):
         os.rmdir(SAVE_PATH)
-
-def get_file_data(filename, filepath):
-    CURRENT_FILE["filename"] = filename
-    CURRENT_FILE["filepath"] = filepath
-
-
 
 # Function to download an image from a URL
 def download_image(url):
@@ -56,10 +69,26 @@ def download_image(url):
     return image
 
 # Function to download an audio file from a URL
-def download_audio(url):
+def download_audio(url, name):
     response = requests.get(url, timeout=60)
-    audio_path = f'{SAVE_PATH}temp_audio.mp3'
+    audio_path = f'{SAVE_PATH}{name}.mp3'
     with open(audio_path, 'wb') as file:
         file.write(response.content)
     return audio_path
+
+def delete_old_files():
+    """
+    Deletes files that were created more than 1 minute ago.
+    """
+    current_time = time.time()
+    for filename in os.listdir("temp/"):
+        file_path = os.path.join("temp/", filename)
+        if os.path.isfile(file_path):
+            # Get the file's creation/modification time
+            file_age = current_time - os.path.getmtime(file_path)
+            if file_age > 60:  # 60 seconds = 1 minute
+                os.remove(file_path)
+                print(f'{filename} deleted (older than 1 minute).')
+
+# Set up the scheduler to delete old files periodically
 
