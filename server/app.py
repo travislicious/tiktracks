@@ -6,9 +6,13 @@ import requests
 import bs4
 import renderer
 from apscheduler.schedulers.background import BackgroundScheduler
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 CORS(app)
+load_dotenv()
 
 def delete_file(filename, delay):
     """
@@ -34,6 +38,7 @@ def extract_from_embed(url):
         'song_name': song_name,
         'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
         'video_filename': f'{music_author} - {song_name} (Video).mp4',
+        'cover_url': profile_pic if song_name.strip() == 'original sound' else get_song_cover_art(f'{music_author} - {song_name}')
     }
 
     return song_data
@@ -59,6 +64,27 @@ def extract_sound(link):
     span_list = [elem.string for elem in html.find_all('span')]
 
     return url_list[0], url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
+
+
+def get_song_cover_art(song_name):
+    # Replace these with your Spotify API credentials
+    client_id = os.getenv('CLIENT_ID')
+    client_secret = os.getenv('CLIENT_SECRET')
+
+    # Setup Spotify client credentials manager
+    sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
+
+    # Search for the song
+    result = sp.search(q=song_name, type='track', limit=1)
+
+    # Extract cover art URL
+    if result['tracks']['items']:
+        cover_art_url = result['tracks']['items'][0]['album']['images'][0]['url']
+        return cover_art_url
+    else:
+        return ""
+
+
 
 def extract_from_slideshow(link):
     url = "https://ttsave.app/download"
