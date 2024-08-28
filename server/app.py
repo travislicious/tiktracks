@@ -6,13 +6,9 @@ import requests
 import bs4
 import renderer
 from apscheduler.schedulers.background import BackgroundScheduler
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-from dotenv import load_dotenv
 
 app = Flask(__name__)
 CORS(app)
-load_dotenv()
 
 def delete_file(filename, delay):
     """
@@ -34,11 +30,11 @@ def extract_from_embed(url):
     song_data = {
         'music_url': music_url,
         'author_name': data['author_name'],
-        'profile_pic': profile_pic,
         'song_name': song_name,
         'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
         'video_filename': f'{music_author} - {song_name} (Video).mp4',
-        'cover_url': profile_pic if song_name.strip() == 'original sound' else get_song_cover_art(f'{music_author} - {song_name}')
+        'cover_url': data['thumbnail_url'],
+        'profile_pic': profile_pic
     }
 
     return song_data
@@ -66,24 +62,6 @@ def extract_sound(link):
     return url_list[0], url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
 
 
-def get_song_cover_art(song_name):
-    # Replace these with your Spotify API credentials
-    client_id = os.getenv('CLIENT_ID')
-    client_secret = os.getenv('CLIENT_SECRET')
-
-    # Setup Spotify client credentials manager
-    sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
-
-    # Search for the song
-    result = sp.search(q=song_name, type='track', limit=1)
-
-    # Extract cover art URL
-    if result['tracks']['items']:
-        cover_art_url = result['tracks']['items'][0]['album']['images'][0]['url']
-        return cover_art_url
-    else:
-        return ""
-
 
 
 def extract_from_slideshow(link):
@@ -95,8 +73,26 @@ def extract_from_slideshow(link):
     html = bs4.BeautifulSoup(resp.content, 'html.parser')
     url_list = [elem["href"] for elem in html.find_all('a')]
     span_list = [elem.string for elem in html.find_all('span')]
+    h2_list = [elem.string for elem in html.find_all('h2')]
+    audio_url = html.find("a", {"type": "audio"}).get("href")
 
-    return url_list[0], url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
+    return url_list[0], url_list[2], audio_url, span_list[4].split('-')[1], span_list[4].split('-')[0], h2_list[0]
+
+def get_from_slideshow(url):
+    renderer.init()
+    profile_pic, thumb_url, music_url, song_name, music_author, author_name = extract_from_slideshow(url)
+    song_data = {
+        'music_url': music_url,
+        'author_name': author_name,
+        'song_name': song_name,
+        'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
+        'video_filename': f'{music_author} - {song_name} (Video).mp4',
+        'cover_url': thumb_url,
+        'profile_pic': profile_pic
+    }
+
+    return song_data
+
 
         
 
@@ -107,6 +103,9 @@ def scrape():
     if url:
         if "https://www.tiktok.com/" in url and "video" in url:
             res = extract_from_embed(url)
+            result = res
+        elif "https://www.tiktok.com/" in url and "photo" in url:
+            res = get_from_slideshow(url)
             result = res
         else:
             result = {"error": "130"}
