@@ -1,39 +1,31 @@
-# Use an official Python runtime as a parent image
+# syntax=docker/dockerfile:1
+
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Dockerfile reference guide at
+# https://docs.docker.com/go/dockerfile-reference/
+
+# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+
 FROM python:3.11-slim
 
-# Set environment variables to prevent Python from buffering stdout and to define the working directory
+# Keeps Python from buffering stdout and stderr to avoid situations where
+# the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Install system dependencies required for Playwright
-RUN apt-get update && \
-    apt-get install -y \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libgtk-3-0 \
-    wget \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /app/temp && chmod -R 777 /app/temp
+
+COPY requirements.txt .
+
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy the source code into the container.
+COPY . .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Expose the port that the application listens on.
+EXPOSE 8000
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
-
-# Define environment variable
-
-# Run flask when the container launches
-CMD ["flask", "--app", "app", "run" "--host=0.0.0.0"]
+# Run the application.
+CMD gunicorn 'app:app' --bind=0.0.0.0:8000 --workers 3 --timeout 1000
