@@ -1,5 +1,6 @@
 import io
-import time, os
+import time
+import os
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import requests
@@ -26,10 +27,10 @@ def extract_from_embed(url):
     embed_url = f'https://www.tiktok.com/oembed?url={url}'
     data = requests.get(embed_url, timeout=60)
     data = data.json()
-    music_url, song_name, music_author = extract_sound(url)
+    music_url, song_name, music_author, video_author = extract_sound(url)
     song_data = {
         'music_url': music_url,
-        'author_name': data['author_name'],
+        'video_author': video_author,
         'song_name': song_name,
         'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
         'video_filename': f'{music_author} - {song_name} (Video).mp4',
@@ -57,9 +58,10 @@ def extract_sound(link):
     resp = requests.post(url, json=data, timeout=60)
     html = bs4.BeautifulSoup(resp.content, 'html.parser')
     url_list = [elem["href"] for elem in html.find_all('a')]
+    h2_list = [elem.string for elem in html.find_all('h2')]
     span_list = [elem.string for elem in html.find_all('span')]
 
-    return url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
+    return url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0], h2_list[0]
 
 
 
@@ -83,7 +85,7 @@ def get_from_slideshow(url):
     thumb_url, music_url, song_name, music_author, author_name = extract_from_slideshow(url)
     song_data = {
         'music_url': music_url,
-        'author_name': author_name,
+        'video_author': author_name,
         'song_name': song_name,
         'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
         'video_filename': f'{music_author} - {song_name} (Video).mp4',
@@ -128,6 +130,9 @@ def download():
 def download_video():
     data = request.args
 
+    if not os.path.exists(data['path']):
+        return ''
+
     return send_file(data['path'], mimetype='video/mp4', as_attachment=True, download_name=data['name'])
 
 def delete_old_files():
@@ -140,9 +145,9 @@ def delete_old_files():
         if os.path.isfile(file_path):
             # Get the file's creation/modification time
             file_age = current_time - os.path.getmtime(file_path)
-            if file_age > 300:  # 60 seconds = 1 minute
+            if file_age > 120:  # 60 seconds = 1 minute
                 os.remove(file_path)
-                print(f'{filename} deleted (older than 1 minute).')
+                print(f'{filename} deleted (older than 3 minutes).')
 
 # Set up the scheduler to delete old files periodically
 scheduler = BackgroundScheduler()

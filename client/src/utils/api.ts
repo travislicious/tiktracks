@@ -3,7 +3,7 @@ import ky from "ky";
 
 export interface Song {
     audio_filename: string;
-    author_name:    string;
+    video_author:    string;
     cover_url:      string;
     music_url:      string;
     song_name:      string;
