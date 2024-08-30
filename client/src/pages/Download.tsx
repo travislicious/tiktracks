@@ -68,8 +68,12 @@ export default function DownloadPage() {
         return (
             <main className="w-screen h-screen flex flex-col p-4 items-center justify-center">
                 <header className="w-full flex items-center justify-between">
-                    <ArrowLeft/>
-                    <Share2/>
+                    <a href="/" role="button">                  
+                        <ArrowLeft/>
+                    </a>
+                    <Share2 onClick={() => {navigator.clipboard.writeText("http://localhost:5173")
+                        alert("Link Copied.")
+                    }}/>
                 </header>
                 <section className="w-full h-full flex flex-col items-center justify-center gap-5">
                     <section className="w-full flex items-center gap-4">
