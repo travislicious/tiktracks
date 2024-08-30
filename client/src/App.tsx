@@ -21,7 +21,7 @@ export default function App() {
       console.log(error)
     } else {
       if (url.includes("https://www.tiktok.com/") || url.includes("/video/") && url.includes("/photo/") && url.includes("https://www.tiktok.com/")) {
-        console.log(url)
+        window.sessionStorage.setItem("url", url)
         if (url.includes("/video/")) {
           const videoIdMatch = url.match(/\/video\/(\d+)/);
 

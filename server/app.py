@@ -26,7 +26,7 @@ def extract_from_embed(url):
     embed_url = f'https://www.tiktok.com/oembed?url={url}'
     data = requests.get(embed_url, timeout=60)
     data = data.json()
-    profile_pic, music_url, song_name, music_author = extract_sound(url)
+    music_url, song_name, music_author = extract_sound(url)
     song_data = {
         'music_url': music_url,
         'author_name': data['author_name'],
@@ -34,7 +34,7 @@ def extract_from_embed(url):
         'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
         'video_filename': f'{music_author} - {song_name} (Video).mp4',
         'cover_url': data['thumbnail_url'],
-        'profile_pic': profile_pic
+        'music_author': music_author
     }
 
     return song_data
@@ -59,7 +59,7 @@ def extract_sound(link):
     url_list = [elem["href"] for elem in html.find_all('a')]
     span_list = [elem.string for elem in html.find_all('span')]
 
-    return url_list[0], url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
+    return url_list[4], span_list[4].split('-')[1], span_list[4].split('-')[0]
 
 
 
@@ -76,11 +76,11 @@ def extract_from_slideshow(link):
     h2_list = [elem.string for elem in html.find_all('h2')]
     audio_url = html.find("a", {"type": "audio"}).get("href")
 
-    return url_list[0], url_list[2], audio_url, span_list[4].split('-')[1], span_list[4].split('-')[0], h2_list[0]
+    return url_list[2], audio_url, span_list[4].split('-')[1], span_list[4].split('-')[0], h2_list[0]
 
 def get_from_slideshow(url):
     renderer.init()
-    profile_pic, thumb_url, music_url, song_name, music_author, author_name = extract_from_slideshow(url)
+    thumb_url, music_url, song_name, music_author, author_name = extract_from_slideshow(url)
     song_data = {
         'music_url': music_url,
         'author_name': author_name,
@@ -88,7 +88,7 @@ def get_from_slideshow(url):
         'audio_filename': f'{music_author} - {song_name} (Audio).mp3',
         'video_filename': f'{music_author} - {song_name} (Video).mp4',
         'cover_url': thumb_url,
-        'profile_pic': profile_pic
+        'music_author': music_author
     }
 
     return song_data

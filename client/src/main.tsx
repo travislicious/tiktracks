@@ -7,6 +7,9 @@ import TermsPage from './pages/Terms.tsx'
 import DownloadPage from './pages/Download.tsx'
 import AboutPage from './pages/About.tsx'
 import './index.css'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const query = new QueryClient()
 
 const router = createBrowserRouter([
   {
@@ -30,6 +33,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={query}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   </StrictMode>,
 )
