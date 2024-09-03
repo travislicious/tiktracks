@@ -3,18 +3,32 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 import requests
 import renderer
 
 app = FastAPI()
 
+class Request(BaseModel):
+    image_url: str
+    music_url: str
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/check-status")
+def check_status(path: str):
+    delete_old_files()
+    if not os.path.exists(path):
+        return 'Not found'
+    else:
+        return 'Found'
 
 def delete_file(filename, delay):
     """
@@ -28,9 +42,9 @@ def delete_file(filename, delay):
 
 
 @app.post("/create-video")
-def create_video(music_link: str, image_link: str):
-    image_url = image_link
-    music_url = music_link
+def create_video(req: Request):
+    image_url = req.image_url
+    music_url = req.music_url
     renderer.init()
     video_path = renderer.create_video(music_url, image_url)
 
@@ -61,6 +75,19 @@ def download_video(path: str, name:str):
     delete_old_files()
     if not os.path.exists(path):
         return ''
+
+    return FileResponse(path, media_type='video/mp4', filename=name)
+def download_audio(url, name):
+    response = requests.get(url, timeout=60)
+    audio_path = f'temp/{name}.mp3'
+    with open(audio_path, 'wb') as file:
+        file.write(response.content)
+    return audio_path
+
+@app.get("/download-audio")
+def serve_audio(url: str, name:str):
+    path = download_audio(url, name)
+    delete_old_files()
 
     return FileResponse(path, media_type='video/mp4', filename=name)
 

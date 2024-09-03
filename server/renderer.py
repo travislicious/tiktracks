@@ -48,7 +48,7 @@ def create_video(audio_url, thumb_url):
     video_clip = image_clip.set_audio(audio_clip)
 
     # Export video
-    video_clip.write_videofile(f'temp/{video_name}.mp4', fps=30)
+    video_clip.write_videofile(f'temp/{video_name}.mp4', fps=30, threads=2)
 
     delete_old_files()
 

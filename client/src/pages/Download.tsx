@@ -7,7 +7,7 @@ import { useFetchSongData } from "../utils/api"
 export default function DownloadPage() {
     const [url, setUrl] = useState("")
     const { data, error, isLoading } = useFetchSongData(url)
-    const [videoPath, setVideoPath] = useState("")
+    const [videoPath, setVideoPath] = useState<string | null>("")
     const [isProcessing, setIsProcessing] = useState(false)
 
     const [duration, setDuration] = useState(0)
@@ -19,9 +19,24 @@ export default function DownloadPage() {
         });
     };
 
+    async function checkStatus() {
+        if (videoPath) {
+            const res = await fetch(`http://localhost:8000/check-status?path=${videoPath}`)
+            const data = await res.json()
+            if (data === "Not Found") {
+                setVideoPath(null)
+            } else {
+                return
+            }
+        } else {
+            return
+        }
+    }
+
     async function processVideo() {
         setIsProcessing(true)
-        const url = 'https://tiktracks-backend.onrender.com/create-video';
+        checkStatus()
+        const url = 'http://localhost:8000/create-video';
 
         const fetchData = {
             image_url: data?.cover_url,
@@ -34,6 +49,7 @@ export default function DownloadPage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(fetchData),
+            signal: AbortSignal.timeout(120000)
         });
 
         interface Response {
@@ -90,11 +106,11 @@ export default function DownloadPage() {
                         </div>
                     </section>
                     <section className="flex w-full items-center justify-center flex-col gap-3 md:w-96">
-                        { !videoPath ? (<button className="btn btn-primary w-full font-bold text-lg md:text-xl" disabled={isProcessing} onClick={processVideo}>{ isProcessing ? "Processing Video" : "Process Video"}</button>) : (
-                            <a href={`https://tiktracks-backend.onrender.com/download-video?path=${videoPath}&name=${data?.video_filename}`} target="_blank" role="button" className="btn w-full font-bold text-lg btn-primary md:text-xl">Download Video</a>
+                        { !videoPath ? (<button className="btn btn-primary w-full font-bold text-lg md:text-xl" disabled={isProcessing} onClick={processVideo}>{ isProcessing && (<span className="loading loading-spinner"></span>)}{ isProcessing ? "Processing Video" : "Process Video"}</button>) : (
+                            <a href={`http://localhost:8000/download-video?path=${videoPath}&name=${data?.video_filename}`} target="_blank" role="button" className="btn w-full font-bold text-lg btn-primary md:text-xl">Download Video</a>
                         )}
-                        { !isProcessing && (<a role="button" href={data?.music_url} download={data?.audio_filename} target="_blank" className="btn w-full font-bold text-lg md:text-xl">Download Audio.</a>)}
-                        { videoPath && <h6 className="text-sm text-white/30 w-full text-center md:text-base">Processed Videos are deleted after 2 minutes.</h6>}
+                        { !isProcessing && (<a role="button" href={`http://localhost:8000/download-audio?url=${data?.music_url}&name=${data?.audio_filename}`} target="_blank" className="btn w-full font-bold text-lg md:text-xl">Download Audio.</a>)}
+                        { videoPath && <h6 className="text-sm text-white/30 w-full text-center md:text-base">Processed Videos are deleted after 3 minutes.</h6>}
                     </section>
                 </section>
                 <footer className="w-full">
