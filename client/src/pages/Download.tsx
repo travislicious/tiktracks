@@ -3,12 +3,14 @@ import { useState, useEffect } from "react"
 import Loading from "./LoadingDownload"
 import ErrorSection from "./ErrorSection"
 import { useFetchSongData } from "../utils/api"
+import { useNavigate } from "react-router-dom"
 
 export default function DownloadPage() {
     const [url, setUrl] = useState("")
     const { data, error, isLoading } = useFetchSongData(url)
     const [videoPath, setVideoPath] = useState<string | null>("")
     const [isProcessing, setIsProcessing] = useState(false)
+    const navigate = useNavigate()
 
     const [duration, setDuration] = useState(0)
 
@@ -74,6 +76,8 @@ export default function DownloadPage() {
         const urlData = window.sessionStorage.getItem("url")
         if (urlData) {
             setUrl(urlData)
+        } else {
+            navigate("/")
         }
     }
 
