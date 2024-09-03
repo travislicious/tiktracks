@@ -13,7 +13,7 @@ export interface Song {
 
 export const useFetchSongData = (url: string) => {
     return useQuery({
-        queryFn: () => ky.get(`http://127.0.0.1:5000/?url=${url}`).json<Song>(),
+        queryFn: () => ky.get(`https://tiktracks-backend.onrender.com/?url=${url}`).json<Song>(),
         queryKey: ["urlKey", url]
     })
 }

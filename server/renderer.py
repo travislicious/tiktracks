@@ -6,14 +6,10 @@ from PIL import Image
 import random
 import string
 import time
-from apscheduler.schedulers.background import BackgroundScheduler
 
 SAVE_PATH = "temp/"
 
 def init():
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(delete_old_files, 'interval', seconds=10)  # Check every 10 seconds
-    scheduler.start()
     os.makedirs("temp", exist_ok=True)
 
 def generate_random_filename(length=12):
@@ -54,6 +50,8 @@ def create_video(audio_url, thumb_url):
     # Export video
     video_clip.write_videofile(f'temp/{video_name}.mp4', fps=30)
 
+    delete_old_files()
+
 
     return f'temp/{video_name}.mp4'
 
@@ -78,7 +76,7 @@ def download_audio(url, name):
 
 def delete_old_files():
     """
-    Deletes files that were created more than 1 minute ago.
+    Deletes files that were created more than 3 minutes ago.
     """
     current_time = time.time()
     for filename in os.listdir("temp/"):
@@ -86,9 +84,7 @@ def delete_old_files():
         if os.path.isfile(file_path):
             # Get the file's creation/modification time
             file_age = current_time - os.path.getmtime(file_path)
-            if file_age > 60:  # 60 seconds = 1 minute
+            if file_age > 180:  # 60 seconds = 1 minute
                 os.remove(file_path)
-                print(f'{filename} deleted (older than 1 minute).')
-
-# Set up the scheduler to delete old files periodically
+                print(f'{filename} deleted (older than 3 minutes).')
 

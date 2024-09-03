@@ -1,11 +1,3 @@
-# syntax=docker/dockerfile:1
-
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
 FROM python:3.11-slim
 
 # Keeps Python from buffering stdout and stderr to avoid situations where
@@ -16,16 +8,21 @@ WORKDIR /app
 
 RUN mkdir -p /app/temp && chmod -R 777 /app/temp
 
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6
+
 COPY requirements.txt .
 
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 
 # Copy the source code into the container.
 COPY . .
 
 # Expose the port that the application listens on.
-EXPOSE 8000
+EXPOSE 5000
 
 # Run the application.
-CMD gunicorn 'app:app' --bind=0.0.0.0:8000 --workers 3 --timeout 1000
+CMD ["fastapi", "run", "app.py", "--port", "5000"]

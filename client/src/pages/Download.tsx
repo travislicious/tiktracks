@@ -21,7 +21,7 @@ export default function DownloadPage() {
 
     async function processVideo() {
         setIsProcessing(true)
-        const url = 'http://127.0.0.1:5000/create-video';
+        const url = 'https://tiktracks-backend.onrender.com/create-video';
 
         const fetchData = {
             image_url: data?.cover_url,
@@ -64,7 +64,7 @@ export default function DownloadPage() {
         return <ErrorSection/>
     }
 
-    if (!isLoading) {
+    if (!isLoading || error) {
         return (
             <main className="w-screen h-screen flex flex-col p-4 items-center justify-center">
                 <header className="w-full flex items-center justify-between">
@@ -91,9 +91,9 @@ export default function DownloadPage() {
                     </section>
                     <section className="flex w-full items-center justify-center flex-col gap-3 md:w-96">
                         { !videoPath ? (<button className="btn btn-primary w-full font-bold text-lg md:text-xl" disabled={isProcessing} onClick={processVideo}>{ isProcessing ? "Processing Video" : "Process Video"}</button>) : (
-                            <a href={`http://127.0.0.1:5000/download-video?path=${videoPath}&name=${data?.video_filename}`} target="_blank" role="button" className="btn w-full font-bold text-lg btn-primary md:text-xl">Download Video</a>
+                            <a href={`https://tiktracks-backend.onrender.com/download-video?path=${videoPath}&name=${data?.video_filename}`} target="_blank" role="button" className="btn w-full font-bold text-lg btn-primary md:text-xl">Download Video</a>
                         )}
-                        { !isProcessing && (<a role="button" href={`http://127.0.0.1:5000/download-song?url=${data?.music_url}&name=${data?.audio_filename}`} target="_blank" className="btn w-full font-bold text-lg md:text-xl">Download Audio.</a>)}
+                        { !isProcessing && (<a role="button" href={data?.music_url} download={data?.audio_filename} target="_blank" className="btn w-full font-bold text-lg md:text-xl">Download Audio.</a>)}
                         { videoPath && <h6 className="text-sm text-white/30 w-full text-center md:text-base">Processed Videos are deleted after 2 minutes.</h6>}
                     </section>
                 </section>
