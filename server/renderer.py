@@ -27,7 +27,7 @@ def delete_file(filename, delay):
         os.remove(file_path)
         print(f'{filename} deleted.')
 
-def create_video(audio_url, thumb_url):
+def create_video(audio_url, thumb_url, return_dict):
 
     video_name = generate_random_filename()
     audio_name = generate_random_filename()
@@ -52,8 +52,10 @@ def create_video(audio_url, thumb_url):
 
     delete_old_files()
 
+    return_dict["video_path"] = f'temp/{video_name}.mp4'
 
-    return f'temp/{video_name}.mp4'
+
+    return return_dict
 
 
 def clear_all():

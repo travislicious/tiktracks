@@ -1,5 +1,6 @@
 import time
 import os
+import multiprocessing
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -28,7 +29,7 @@ def check_status(path: str):
     if not os.path.exists(path):
         return 'Not found'
     else:
-        return 'Found'
+        return path
 
 def delete_file(filename, delay):
     """
@@ -46,10 +47,14 @@ def create_video(req: Request):
     image_url = req.image_url
     music_url = req.music_url
     renderer.init()
-    video_path = renderer.create_video(music_url, image_url)
+    manager = multiprocessing.Manager()
+    return_val = manager.dict()
+    p1 = multiprocessing.Process(target=renderer.create_video, args=(music_url, image_url, return_val))
+    p1.start()
+    p1.join()
 
 
-    return {'path': video_path}
+    return {'path': return_val.values()}
 
 
 @app.get("/")
@@ -89,7 +94,7 @@ def serve_audio(url: str, name:str):
     path = download_audio(url, name)
     delete_old_files()
 
-    return FileResponse(path, media_type='video/mp4', filename=name)
+    return FileResponse(path, media_type='video/mp4', filename=name.removesuffix(".mp3"))
 
 
 def delete_old_files():
