@@ -95,7 +95,7 @@ export default function DownloadPage() {
                     <a href="/" role="button">                  
                         <ArrowLeft className="md:size-8"/>
                     </a>
-                    <Share2 onClick={() => {navigator.clipboard.writeText("http://localhost:5173")
+                    <Share2 onClick={() => {navigator.clipboard.writeText("https://tiktracks.vercel.app/")
                         alert("Link Copied.")
                     }} tabIndex={0} className="cursor-pointer"/>
                 </header>
